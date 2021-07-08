@@ -1,14 +1,12 @@
 package de.gitlab.kaisoenmalex.server;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import de.gitlab.kaisoenmalex.api.game.BattleshipClient;
 import de.gitlab.kaisoenmalex.api.game.BattleshipGame;
 import de.gitlab.kaisoenmalex.api.network.packets.ConnectPacket;
 import de.gitlab.kaisoenmalex.api.util.Tuple;
 import spark.Spark;
 
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,7 +63,6 @@ public class BattleshipServer {
 
             if (connectPacket.isHost()){
                 final String code = generateCode();
-                final BattleshipGame game = new BattleshipGame(code, connectPacket.isNoobVariant(), client);
 
                 if (connectPacket.isRandomEnemy()){
                     if (WAITING_GAMES_RANDOM.size() > 1){
@@ -75,9 +72,13 @@ public class BattleshipServer {
                         ACTIVE_GAMES.put(host.getCode(), WAITING_GAMES_RANDOM.remove(0));
 
                     }
-                    else WAITING_GAMES_RANDOM.add(game);
+                    else {
+                        final BattleshipGame game = new BattleshipGame(code, connectPacket.isNoobVariant(), client);
+                        WAITING_GAMES_RANDOM.add(game);
+                    }
                 }
                 else {
+                    final BattleshipGame game = new BattleshipGame(code, connectPacket.isNoobVariant(), client);
                     WAITING_GAMES_CODE.put(code, game);
                 }
 
@@ -91,7 +92,7 @@ public class BattleshipServer {
 
                 host.guestClientJoin(client);
 
-                return serverSocket.getLocalPort();
+                return gson.toJson(new Tuple<>("", serverSocket.getLocalPort()));
             }
         });
     }
