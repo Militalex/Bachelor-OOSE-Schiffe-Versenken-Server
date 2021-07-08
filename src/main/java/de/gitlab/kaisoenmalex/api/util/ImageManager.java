@@ -63,8 +63,6 @@ public class ImageManager {
      * @param rot Individual Rotation.
      */
     public void addKey(@NotNull String key, Rotation rot){
-        if (!IMAGE_MAP.containsKey(key)) throw new IllegalArgumentException("Key is not in Image Map.");
-
         imageKeys.add(key);
         imageRot.add(rot);
     }
