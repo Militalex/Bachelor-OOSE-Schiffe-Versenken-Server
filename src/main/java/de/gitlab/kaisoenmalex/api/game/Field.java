@@ -7,7 +7,7 @@ import javafx.scene.image.Image;
 
 /**
  * @author Alexander Ley
- * @version 1.1
+ * @version 1.2
  *
  * This class represents one field in GameArea and manage all field properties including textures.
  */
@@ -23,14 +23,8 @@ public class Field implements ILogger {
     private final ImageManager manager = new ImageManager("water.png");
 
     public Field(int xCord, int yCord){
-        this(xCord, yCord, false, false);
-    }
-
-    public Field(int xCord, int yCord, boolean isShoot, boolean isShip) {
         this.xCord = xCord;
         this.yCord = yCord;
-        this.isShoot = isShoot;
-        this.isShip = isShip;
     }
 
     public int getXCord() {
