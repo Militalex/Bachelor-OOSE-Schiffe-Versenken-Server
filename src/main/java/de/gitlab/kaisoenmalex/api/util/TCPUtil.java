@@ -51,6 +51,34 @@ public class TCPUtil implements ILogger{
 
     /**
      * Tries to read an object from BufferedReader.
+     * @param <T> Object type that was saved to json.
+     * @return Returns the json decrypted object.
+     * @throws IllegalStateException when BufferedReader is not readable.
+     * @throws JsonParseException when json cannot decrypted to object.
+     */
+    public static <T> T receiveObject(BufferedReader reader, Class<T> clazz){
+        try {
+            if (!reader.ready()) {
+                STATIC_LOGGER.warn("BufferedReader is not readable.");
+                throw new IllegalStateException("BufferedReader is not readable.");
+            }
+
+            final String json = reader.readLine();
+            return gson.fromJson(json, clazz);
+        }
+        catch (JsonParseException e){
+            STATIC_LOGGER.warn("Cannot get Object from json.", e);
+            throw e;
+        }
+        catch (IOException e) {
+            STATIC_LOGGER.error("An I/O error occurs.", e);
+            throw new IllegalStateException("BufferedReader is not readable.", e);
+        }
+    }
+
+
+    /**
+     * Tries to read an object from BufferedReader.
      * @param typeToken have to be new TypeToken<>(){}
      * @param <T> Object type that was saved to json.
      * @return Returns the json decrypted object.
