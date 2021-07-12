@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author Alexander Ley
- * @version 1.0
+ * @version 1.1
  *
  * This Class is the entry Point for the Server Application.
  */
@@ -65,7 +65,7 @@ public class BattleshipServer {
                 final String code = generateCode();
 
                 if (connectPacket.isRandomEnemy()){
-                    if (WAITING_GAMES_RANDOM.size() > 1){
+                    if (WAITING_GAMES_RANDOM.size() >= 1){
 
                         final BattleshipGame host = WAITING_GAMES_RANDOM.get(0);
                         host.guestClientJoin(client);
@@ -88,7 +88,7 @@ public class BattleshipServer {
                 final String code = connectPacket.getCode();
                 final BattleshipGame host = ACTIVE_GAMES.get(code);
 
-                if (host == null) return -1;
+                if (host == null) return null;
 
                 host.guestClientJoin(client);
 
@@ -110,6 +110,7 @@ public class BattleshipServer {
                     .limit(targetStringLength)
                     .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                     .toString();
+
         } while (ACTIVE_GAMES.containsKey(code) || WAITING_GAMES_CODE.containsKey(code)
                 || WAITING_GAMES_RANDOM.stream()
                         .map(BattleshipGame::getCode)
