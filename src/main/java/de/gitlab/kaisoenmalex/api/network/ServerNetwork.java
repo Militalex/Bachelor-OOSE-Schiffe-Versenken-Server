@@ -1,7 +1,9 @@
 package de.gitlab.kaisoenmalex.api.network;
 
 import de.gitlab.kaisoenmalex.api.game.BattleshipGame;
+import de.gitlab.kaisoenmalex.api.network.packets.ActionPacket;
 import de.gitlab.kaisoenmalex.api.util.ILogger;
+import de.gitlab.kaisoenmalex.api.util.Reflector;
 import de.gitlab.kaisoenmalex.api.util.TCPUtil;
 import de.gitlab.kaisoenmalex.api.util.Tickable;
 import org.slf4j.Logger;
@@ -10,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
@@ -48,7 +51,18 @@ public class ServerNetwork implements ILogger, Closeable {
      * This methods handles all client requests.
      */
     public void handleClientRequest(PrintWriter writer, BufferedReader reader, int id){
-        //TODO: Define Reactions of server for client requests.
+        final ActionPacket packet = TCPUtil.receiveObject(reader, ActionPacket.class);
+        try {
+            if (packet.getParameters().isEmpty()){
+                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer, game, (id == 0) ? game.getHostClient() : game.getGuestClient());
+            }
+            else {
+                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer, game, (id == 0) ? game.getHostClient() : game.getGuestClient(), packet.getParameters().toArray());
+            }
+        }
+        catch (InvocationTargetException | IllegalAccessException e) {
+            LOGGER.error("Cannot invoke task: " + packet.getMethodName(), e);
+        }
     }
 
     //Methods to send things to client
