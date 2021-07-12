@@ -19,7 +19,7 @@ import java.util.List;
 
 /**
  * @author Alexander Ley
- * @version 1.0
+ * @version 1.1
  *
  * This Class helps to communicate with Clients. It can send things to client and handle client requests.
  */

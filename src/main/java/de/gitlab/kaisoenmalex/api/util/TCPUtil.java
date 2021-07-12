@@ -12,7 +12,7 @@ import java.net.Socket;
 
 /**
  * @author Alexander Ley
- * @version 1.0
+ * @version 1.1
  *
  * This class offers basic tcp methods.
  */
