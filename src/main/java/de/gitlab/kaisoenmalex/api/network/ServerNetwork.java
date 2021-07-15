@@ -13,8 +13,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.util.List;
 
 /**
@@ -45,6 +44,14 @@ public class ServerNetwork implements ILogger, Closeable {
 
         listener0 = new Listener(socket1, 0);
         listener1 = new Listener(socket2, 1);
+    }
+
+    public Listener getHostListener() {
+        return listener0;
+    }
+
+    public Listener getGuestListener() {
+        return listener1;
     }
 
     /**
@@ -111,10 +118,14 @@ public class ServerNetwork implements ILogger, Closeable {
     /**
      * This inner class listen for client requests and fires the handleClientRequest method.
      */
-    private class Listener extends Tickable implements Closeable {
+    public class Listener extends Tickable implements Closeable {
 
         private final ServerSocket serverSocket;
+        private Socket socket;
         private final int id;
+
+        private final Tickable aliveChecker;
+        private boolean hasAnswered = true;
 
         /**
          * @param serverSocket Socket to listen on.
@@ -124,7 +135,27 @@ public class ServerNetwork implements ILogger, Closeable {
             this.serverSocket = serverSocket;
             this.id = id;
 
-            start(2000, 5000);
+            this.aliveChecker = new Tickable() {
+                @Override
+                public void tick() {
+                    if (hasAnswered) {
+                        System.out.println("Test Alive");
+                        final ActionPacket packet = new ActionPacket("isAlive");
+                        sendObject(packet, id);
+                        hasAnswered = false;
+                    }
+                    else {
+                        System.out.println("Abort Game");
+                        final ActionPacket stopPacket = new ActionPacket("abortGame");
+                        sendObject(stopPacket, 0);
+                        sendObject(stopPacket, 1);
+
+                        game.close();
+                    }
+                }
+            };
+
+            start(2000, 2500);
         }
 
         /**
@@ -133,22 +164,34 @@ public class ServerNetwork implements ILogger, Closeable {
         @Override
         public void tick() {
             try {
-                //Wait for request.
-                final Socket socket = serverSocket.accept();
+                //Wait for client to connect
+                if (socket == null) {
+                    socket = serverSocket.accept();
+                }
+
                 final PrintWriter writer = TCPUtil.getWriter(socket);
 
                 if (id == 0) writer0 = writer;
                 else  writer1 = writer;
 
-                try {
-                    handleClientRequest(writer, TCPUtil.getReader(socket), id);
+                final BufferedReader reader = TCPUtil.getReader(socket);
+
+                if (reader.ready()){
+                    handleClientRequest(writer, reader, id);
                 }
-                catch (IOException ignored) { }
             }
             catch (IOException e) {
                 LOGGER.error("I/O Error occurs when waiting for a connection. Listener will be closed.", e);
                 close();
             }
+        }
+
+        public void refresh(){
+            this.hasAnswered = true;
+        }
+
+        public void startAliveChecker(){
+            if (this.aliveChecker.isReady()) this.aliveChecker.start(10000, 15000);
         }
 
         /**
@@ -163,6 +206,7 @@ public class ServerNetwork implements ILogger, Closeable {
             catch (IOException e) {
                 LOGGER.warn("An I/O error occurs when closing the socket.", e);
             }
+            aliveChecker.stop();
         }
     }
 }
