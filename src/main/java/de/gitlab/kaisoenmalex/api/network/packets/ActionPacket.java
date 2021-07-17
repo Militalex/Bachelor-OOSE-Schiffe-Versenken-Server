@@ -1,5 +1,6 @@
 package de.gitlab.kaisoenmalex.api.network.packets;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
  *
  * This class is send between server and client to perform an action.
  */
-public class ActionPacket {
+public class ActionPacket implements Serializable {
 
     private final String methodName;
     private final List<Object> parameters;
