@@ -11,6 +11,7 @@ import java.net.ServerSocket;
 public class BattleshipClient {
 
     private boolean ready = false;
+    private boolean isHost;
 
     private final String name;
     private final ServerSocket serverSocket;
@@ -27,6 +28,10 @@ public class BattleshipClient {
         return ready;
     }
 
+    public boolean isHost() {
+        return isHost;
+    }
+
     public String getName() {
         return name;
     }
@@ -41,5 +46,9 @@ public class BattleshipClient {
 
     public void setReady(){
         this.ready = true;
+    }
+
+    public void setHost(boolean host) {
+        isHost = host;
     }
 }
