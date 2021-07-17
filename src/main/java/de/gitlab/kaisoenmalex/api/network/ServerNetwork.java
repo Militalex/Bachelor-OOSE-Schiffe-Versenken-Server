@@ -8,17 +8,17 @@ import de.gitlab.kaisoenmalex.api.util.TCPUtil;
 import de.gitlab.kaisoenmalex.api.util.Tickable;
 import org.slf4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.net.*;
-import java.util.List;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 /**
  * @author Alexander Ley
- * @version 1.1
+ * @version 1.3
  *
  * This Class helps to communicate with Clients. It can send things to client and handle client requests.
  */
@@ -31,11 +31,6 @@ public class ServerNetwork implements ILogger, Closeable {
      */
     private final Listener listener0, listener1;
     private final BattleshipGame game;
-
-    /**
-     * PrintWriter for host and guest. Are only assigned after the first request handle.
-     */
-    private PrintWriter writer0, writer1;
 
     public ServerNetwork(BattleshipGame game, ServerSocket socket1, ServerSocket socket2) {
         this.game = game;
@@ -57,14 +52,20 @@ public class ServerNetwork implements ILogger, Closeable {
     /**
      * This methods handles all client requests.
      */
-    public void handleClientRequest(PrintWriter writer, BufferedReader reader, int id){
-        final ActionPacket packet = TCPUtil.receiveObject(reader, ActionPacket.class);
+    public void handleClientRequest(ObjectOutputStream writer, ObjectInputStream reader, ActionPacket packet, int id) {
         try {
             if (packet.getParameters().isEmpty()){
-                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer, game, (id == 0) ? game.getHostClient() : game.getGuestClient());
+                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer);
             }
             else {
-                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer, game, (id == 0) ? game.getHostClient() : game.getGuestClient(), packet.getParameters().toArray());
+                final Object[] objects = new Object[packet.getParameters().size() + 1];
+                objects[0] = writer;
+
+                for (int i = 1; i <= packet.getParameters().size(); i++){
+                    objects[i] = packet.getParameters().get(i - 1);
+                }
+
+                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), objects);
             }
         }
         catch (InvocationTargetException | IllegalAccessException e) {
@@ -76,30 +77,9 @@ public class ServerNetwork implements ILogger, Closeable {
 
     /**
      * @param id host -> 0; guest -> 1
-     * @throws IllegalStateException when writer is not assigned.
      */
-    public void sendToClient(String msg, int id){
-        PrintWriter writer = ((id == 0) ? writer0 : writer1);
-
-        if (writer == null) throw new IllegalStateException("Writer is not assigned. Wait until first client request handle.");
-
-        writer.println(msg);
-    }
-
-    /**
-     * @param id host -> 0; guest -> 1
-     * @throws IllegalStateException when writer is not assigned.
-     */
-    public void sendToClient(List<String> msgList, int id){
-        msgList.forEach(s -> sendToClient(s, id));
-    }
-
-    /**
-     * @param id host -> 0; guest -> 1
-     * @throws IllegalStateException when writer is not assigned.
-     */
-    public <T> void sendObject(T obj, int id){
-        PrintWriter writer = ((id == 0) ? writer0 : writer1);
+    public <T> void sendObject(T obj, int id) {
+        ObjectOutputStream writer = ((id == 0) ? listener0.getObjectWriter() : listener1.getObjectWriter());
 
         if (writer == null) throw new IllegalStateException("Writer is not assigned. Wait until first client request handle.");
 
@@ -124,7 +104,10 @@ public class ServerNetwork implements ILogger, Closeable {
         private Socket socket;
         private final int id;
 
-        private final Tickable aliveChecker;
+        private ObjectInputStream objectReader;
+        private ObjectOutputStream objectWriter;
+
+        private int aliveCheck = 0;
         private boolean hasAnswered = true;
 
         /**
@@ -135,27 +118,26 @@ public class ServerNetwork implements ILogger, Closeable {
             this.serverSocket = serverSocket;
             this.id = id;
 
-            this.aliveChecker = new Tickable() {
-                @Override
-                public void tick() {
-                    if (hasAnswered) {
-                        System.out.println("Test Alive");
-                        final ActionPacket packet = new ActionPacket("isAlive");
-                        sendObject(packet, id);
-                        hasAnswered = false;
-                    }
-                    else {
-                        System.out.println("Abort Game");
-                        final ActionPacket stopPacket = new ActionPacket("abortGame");
-                        sendObject(stopPacket, 0);
-                        sendObject(stopPacket, 1);
-
-                        game.close();
-                    }
+            Thread connectThread = new Thread(() ->{
+                try {
+                    socket = serverSocket.accept();
                 }
-            };
+                catch (IOException e) {
+                    LOGGER.error("IO Exception on waiting for client.");
+                    game.close();
+                }
+            });
+            connectThread.start();
 
-            start(2000, 2500);
+            start(1000, 2500);
+        }
+
+        public ObjectInputStream getObjectReader() {
+            return objectReader;
+        }
+
+        public ObjectOutputStream getObjectWriter() {
+            return objectWriter;
         }
 
         /**
@@ -163,35 +145,53 @@ public class ServerNetwork implements ILogger, Closeable {
          */
         @Override
         public void tick() {
-            try {
-                //Wait for client to connect
-                if (socket == null) {
-                    socket = serverSocket.accept();
+            aliveCheck++;
+
+            if (aliveCheck > 5){
+                if (hasAnswered) {
+                    System.out.println("Test Alive");
+                    final ActionPacket packet = new ActionPacket("isAlive");
+                    sendObject(packet, id);
+                    hasAnswered = false;
                 }
+                else {
+                    System.out.println("Abort Game");
+                    final ActionPacket stopPacket = new ActionPacket("abortGame");
+                    sendObject(stopPacket, 0);
+                    sendObject(stopPacket, 1);
 
-                final PrintWriter writer = TCPUtil.getWriter(socket);
+                    try {
+                        Thread.sleep(10000);
+                    }
+                    catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
-                if (id == 0) writer0 = writer;
-                else  writer1 = writer;
-
-                final BufferedReader reader = TCPUtil.getReader(socket);
-
-                if (reader.ready()){
-                    handleClientRequest(writer, reader, id);
+                    game.close();
                 }
+                aliveCheck = 0;
             }
-            catch (IOException e) {
-                LOGGER.error("I/O Error occurs when waiting for a connection. Listener will be closed.", e);
-                close();
+            else if (socket != null){
+                try {
+                    if (objectWriter == null) objectWriter = TCPUtil.getObjectWriter(socket);
+                    if (objectReader == null) objectReader = TCPUtil.getObjectReader(socket);
+
+                    try {
+                        if (TCPUtil.getReader(socket).ready()) {
+                            ActionPacket packet = (ActionPacket) TCPUtil.receiveObject(objectReader);
+                            handleClientRequest(objectWriter, objectReader, packet, id);
+                        }
+                    } catch (Exception ignored) { }
+                }
+                catch (IOException e) {
+                    LOGGER.error("I/O Error occurs when waiting for a connection. Listener will be closed.", e);
+                    close();
+                }
             }
         }
 
         public void refresh(){
             this.hasAnswered = true;
-        }
-
-        public void startAliveChecker(){
-            if (this.aliveChecker.isReady()) this.aliveChecker.start(10000, 15000);
         }
 
         /**
@@ -200,13 +200,26 @@ public class ServerNetwork implements ILogger, Closeable {
         @Override
         public void close() {
             stop();
+
+            try {
+                objectWriter.close();
+            } catch (IOException e) {
+                LOGGER.info("An I/O error occurs when closing the ObjectOutputStream.", e);
+            }
+
+            try {
+                objectReader.close();
+            }
+            catch (IOException e) {
+                LOGGER.info("An I/O error occurs when closing the ObjectInputReader.", e);
+            }
+
             try {
                 serverSocket.close();
             }
             catch (IOException e) {
-                LOGGER.warn("An I/O error occurs when closing the socket.", e);
+                LOGGER.info("An I/O error occurs when closing the socket.", e);
             }
-            aliveChecker.stop();
         }
     }
 }
