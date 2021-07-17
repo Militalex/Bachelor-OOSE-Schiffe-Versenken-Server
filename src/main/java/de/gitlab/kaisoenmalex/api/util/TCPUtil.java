@@ -3,11 +3,9 @@ package de.gitlab.kaisoenmalex.api.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
+import de.gitlab.kaisoenmalex.api.network.packets.ActionPacket;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -15,16 +13,24 @@ import java.net.SocketTimeoutException;
 
 /**
  * @author Alexander Ley
- * @version 1.1
+ * @version 1.3
  *
- * This class offers basic tcp methods.
+ * This class offers tcp methods.
  */
 public class TCPUtil implements ILogger{
 
-    public static final String SERVER_ADDRESS = "http://localhost:4567/connect";
+    public static final String SERVER_ADDRESS = "http://localhost:4567/";
     public static final String HOST_ADDRESS = "localhost";
 
     public static final Gson gson = new Gson();
+
+    /**
+     * @return Returns an object writer (is used to send objects) from socket.
+     * @throws IOException when an I/O error occurs when creating the output stream or if the socket is not connected.
+     */
+    public static ObjectOutputStream getObjectWriter(Socket socket) throws IOException {
+        return new ObjectOutputStream(socket.getOutputStream());
+    }
 
     /**
      * @return Returns a writer (is used to send things) from socket.
@@ -43,14 +49,45 @@ public class TCPUtil implements ILogger{
     }
 
     /**
+     * @return Returns an object reader to read objects from tcp connection.
+     * @throws IOException when there are no bytes buffered on the socket, or all buffered bytes have been consumed by read.
+     */
+    public static ObjectInputStream getObjectReader(Socket socket) throws IOException {
+        return new ObjectInputStream(socket.getInputStream());
+    }
+
+    /**
+     * Sends an object via outputStream.
+     * @return Returns id object was successful send. Note: All exceptions are fatal to the OutputStream,
+     * which is left in an indeterminate state.
+     */
+    public static <T> boolean sendObject(ObjectOutputStream stream, T obj) {
+        System.out.println("Send: " + (((obj instanceof ActionPacket)) ? ((ActionPacket) obj).getMethodName() + ": ": "") + obj);
+
+        try {
+            stream.writeObject(obj);
+            return true;
+        }
+        catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
      * This method converts an object via gson to json and send it with (PrintWriter) writer.
      * @param obj Object which is send.
      * @param <T> Object type that is saved to json.
      */
-    public static <T> void sendObject(PrintWriter writer, T obj){
+    public static <T> void sendGsonObject(PrintWriter writer, T obj){
         final String json = gson.toJson(obj, new TypeToken<T>(){}.getType());
         System.out.println(json);
         writer.println(json);
+    }
+
+    public static Object receiveObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        final Object obj = stream.readObject();
+        System.out.println("Received: " + (((obj instanceof ActionPacket)) ? ((ActionPacket) obj).getMethodName() + ": ": "") + obj);
+        return obj;
     }
 
     /**
@@ -60,15 +97,22 @@ public class TCPUtil implements ILogger{
      * @throws IllegalStateException when BufferedReader is not readable.
      * @throws JsonParseException when json cannot decrypted to object.
      */
-    public static <T> T receiveObject(BufferedReader reader, Class<T> clazz){
+    public static <T> T receiveGsonObject(BufferedReader reader, Class<T> clazz){
         try {
             if (!reader.ready()) {
                 STATIC_LOGGER.warn("BufferedReader is not readable.");
                 throw new IllegalStateException("BufferedReader is not readable.");
             }
 
-            final String json = reader.readLine();
-            return gson.fromJson(json, clazz);
+            StringBuilder json = new StringBuilder();
+
+            while (reader.ready()){
+                json.append(reader.readLine());
+            }
+
+            // String json = reader.readLine();
+            System.out.println(json);
+            return gson.fromJson(json.toString(), clazz);
         }
         catch (JsonParseException e){
             STATIC_LOGGER.warn("Cannot get Object from json.", e);
@@ -80,22 +124,20 @@ public class TCPUtil implements ILogger{
         }
     }
 
-
     /**
      * Tries to read an object from BufferedReader.
-     * @param typeToken have to be new TypeToken<>(){}
+     * @param typeToken have to be new TypeToken<T>(){}
      * @param <T> Object type that was saved to json.
      * @return Returns the json decrypted object.
      * @throws IllegalStateException when BufferedReader is not readable.
      * @throws JsonParseException when json cannot decrypted to object.
      */
-    public static <T> T receiveObject(BufferedReader reader, TypeToken<T> typeToken){
+    public static <T> T receiveGsonObject(BufferedReader reader, TypeToken<T> typeToken){
         try {
             if (!reader.ready()) {
                 STATIC_LOGGER.warn("BufferedReader is not readable.");
                 throw new IllegalStateException("BufferedReader is not readable.");
             }
-
             final String json = reader.readLine();
             return gson.fromJson(json, typeToken.getType());
         }
@@ -109,8 +151,10 @@ public class TCPUtil implements ILogger{
         }
     }
 
-
-
+    /**
+     * Tests if port is connectable.
+     * @return Returns true if port is connectable.
+     */
     public static boolean isSocketAlive(int port) {
         boolean isAlive = false;
 
