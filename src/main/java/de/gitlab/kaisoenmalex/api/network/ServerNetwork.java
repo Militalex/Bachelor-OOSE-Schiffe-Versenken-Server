@@ -55,7 +55,7 @@ public class ServerNetwork implements ILogger, Closeable {
     public void handleClientRequest(ObjectOutputStream writer, ObjectInputStream reader, ActionPacket packet, int id) {
         try {
             if (packet.getParameters().isEmpty()){
-                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer);
+                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer, game, (id == 0) ? game.getHostClient() : game.getGuestClient());
             }
             else {
                 final Object[] objects = new Object[packet.getParameters().size() + 1];
@@ -65,7 +65,7 @@ public class ServerNetwork implements ILogger, Closeable {
                     objects[i] = packet.getParameters().get(i - 1);
                 }
 
-                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), objects);
+                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer, game, (id == 0) ? game.getHostClient() : game.getGuestClient(), objects);
             }
         }
         catch (InvocationTargetException | IllegalAccessException e) {
