@@ -5,13 +5,15 @@ import de.gitlab.kaisoenmalex.api.util.ImageManager;
 import de.gitlab.kaisoenmalex.api.util.Rotation;
 import javafx.scene.image.Image;
 
+import java.io.Serializable;
+
 /**
  * @author Alexander Ley
  * @version 1.2
  *
  * This class represents one field in GameArea and manage all field properties including textures.
  */
-public class Field implements ILogger {
+public class Field implements ILogger, Serializable {
 
     private final int xCord, yCord;
     private boolean isShoot;
@@ -68,11 +70,17 @@ public class Field implements ILogger {
     /**
      * Clear field and place water in field.
      */
-    public void setWater(){
+    public void setWater() {
         this.isShip = false;
         this.isShoot = false;
-        manager.clear();
-        manager.addKey("water.png");
+        try {
+            manager.removeKey("ship_middle.png");
+        }
+        catch (IndexOutOfBoundsException ignored) { }
+        try {
+            manager.removeKey("ship_top.png");
+        }
+        catch (IndexOutOfBoundsException ignored) { }
     }
 
     /**
@@ -85,6 +93,24 @@ public class Field implements ILogger {
 
         if (manager.size() > 1) manager.insertKey("shot_water.png", 1);
         else manager.addKey("shot_water.png");
+    }
+
+    /**
+     * Un-marks field.
+     */
+    public void unmarkField(){
+        if (!this.isMarked) return;
+
+        this.isMarked = false;
+        manager.removeKey("shot_water.png");
+    }
+
+    /**
+     * Unmark Field and set remove ships from field.
+     */
+    public void clear(){
+        unmarkField();
+        setWater();
     }
 
     /**

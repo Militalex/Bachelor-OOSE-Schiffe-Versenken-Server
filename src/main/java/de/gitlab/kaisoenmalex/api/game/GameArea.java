@@ -2,15 +2,17 @@ package de.gitlab.kaisoenmalex.api.game;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 /**
  * @author Alexander Ley
- * @version 1.1
+ * @version 1.3
  *
  * This class controls gameArea and offers Methods to place ships, shoot and other cool staff.
  */
-public class GameArea {
+public class GameArea implements Serializable {
 
     private final Field[][] area = new Field[10][10];
 
@@ -31,6 +33,14 @@ public class GameArea {
     public Field getField(int x, int y){
         if (x < 0 || x >= 10 || y < 0 || y >= 10) throw new IllegalArgumentException("Coordinates: (" + x + ", " + y + ") are illegal.");
         return area[y][x];
+    }
+
+    /**
+     * Sets field at (x, y)
+     */
+    public void setField(Field field, int x, int y){
+        if (x < 0 || x >= 10 || y < 0 || y >= 10) throw new IllegalArgumentException("Coordinates: (" + x + ", " + y + ") are illegal.");
+        area[x][y] = field;
     }
 
     /**
@@ -82,7 +92,7 @@ public class GameArea {
 
                 if (field.isShip() || isShipAround(ix, iy)) continue;
 
-                field.setWater();
+                field.unmarkField();
             }
         }
     }
@@ -121,7 +131,7 @@ public class GameArea {
                     (vertical) ? Field.ShipPart.TOP_NORTH : Field.ShipPart.TOP_WEST
             ) : (i == length - 1) ? (
                     (length == 2) ? Field.ShipPart.MIDDLE :
-                    (vertical) ? Field.ShipPart.TOP_SOUTH : Field.ShipPart.TOP_EAST
+                            (vertical) ? Field.ShipPart.TOP_SOUTH : Field.ShipPart.TOP_EAST
             ) : Field.ShipPart.MIDDLE;
 
             field.setShip(part);
@@ -183,6 +193,19 @@ public class GameArea {
         if (field.isShoot()) return null;
 
         return field.shoot();
+    }
+
+    /**
+     * Clears area by removing all ships and marks.
+     */
+    public void clear(){
+        Arrays.stream(area).forEach(fields ->
+                Arrays.stream(fields).forEach(Field::clear));
+    }
+
+    public void forEach(Consumer<Field> consumer){
+        Arrays.stream(area).forEach(fields ->
+                Arrays.stream(fields).forEach(consumer));
     }
 
     /**
