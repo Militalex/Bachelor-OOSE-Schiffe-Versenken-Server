@@ -199,7 +199,7 @@ public class ServerNetwork implements ILogger, Closeable {
          */
         @Override
         public void close() {
-            stop();
+            forceStop();
 
             try {
                 objectWriter.close();

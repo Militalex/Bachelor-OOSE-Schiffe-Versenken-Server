@@ -5,7 +5,7 @@ import java.util.TimerTask;
 
 /**
  * @author Alexander Ley
- * @version 1.4
+ * @version 1.5
  *
  * Represents an Object with Timer
  */
@@ -18,14 +18,22 @@ public abstract class Tickable {
     protected TimerTask task = new TimerTask() {
         @Override
         public void run() {
-            tick();
+            checkTick();
         }
     };
 
     /**
-     * Tick Loop
+     * Task Loop
      */
     public abstract void tick();
+
+    /**
+     * Stop timer in loop if requested by stop.
+     */
+    public void checkTick(){
+        if (!isRunning) forceStop();
+        else tick();
+    }
 
     public boolean isRunning(){
         return isRunning;
@@ -39,17 +47,28 @@ public abstract class Tickable {
      * Starts the Timer
      * @param delay Start delay.
      * @param period Timer period.
+     * @throws IllegalStateException if timer is already started.
      */
     public void start(long delay, long period){
-        timer.schedule(task, delay, period);
+        if (!isReady) throw new IllegalStateException("Timer is already started.");
+
         isRunning = true;
         isReady = false;
+
+        timer.schedule(task, delay, period);
     }
 
     /**
-     * Stops the Timer and makes the timer ready for next start.
+     * Stops Timer on next tick, so that tick() can run to end and in next tick timer will be closed.
      */
-    public void stop() {
+    public void stop(){
+        isRunning = false;
+    }
+
+    /**
+     * Stops Timer immediately. If tick() is running it will be run to end.
+     */
+    public void forceStop() {
         timer.cancel();
         isRunning = false;
     }
