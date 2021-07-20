@@ -28,7 +28,6 @@ public class ActionHandler {
      * Refreshes client timeout when client say he is alive.
      */
     private static void refreshClient(ObjectOutputStream writer, BattleshipGame game, BattleshipClient client){
-        System.out.println("Refresh");
         if (client.isHost()) game.getNetwork().getHostListener().refresh();
         else game.getNetwork().getGuestListener().refresh();
     }
