@@ -9,7 +9,7 @@ import java.io.ObjectOutputStream;
 
 /**
  * @author Alexander Ley
- * @version 1.1
+ * @version 1.1.1
  *
  * This class defines all server reactions.
  * Note every Method have (PrintWriter writer, BattleshipGame game, BattleshipClient client, Object... parameters) Parameters.
@@ -41,6 +41,6 @@ public class ActionHandler {
                         (client.isHost()) ? game.canHostAttack() : game.canGuestAttack(), "empty",
                                 client.getArea(), ((client.isHost() ? game.getGuestClient() : game.getHostClient())).getArea()));
 
-        game.getNetwork().sendObject(statusPacket, client.isHost() ? 0 : 1);
+        game.getNetwork().sendPacket(statusPacket, client.isHost() ? 0 : 1);
     }
 }

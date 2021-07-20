@@ -13,7 +13,7 @@ import java.net.SocketTimeoutException;
 
 /**
  * @author Alexander Ley
- * @version 1.3
+ * @version 1.3.5
  *
  * This class offers tcp methods.
  */
@@ -62,7 +62,7 @@ public class TCPUtil implements ILogger{
      * which is left in an indeterminate state.
      */
     public static <T> boolean sendObject(ObjectOutputStream stream, T obj) {
-        System.out.println("Send: " + (((obj instanceof ActionPacket)) ? ((ActionPacket) obj).getMethodName() + ": ": "") + obj);
+        ILogger.STATIC_LOGGER.info("Send: " + (((obj instanceof ActionPacket)) ? ((ActionPacket) obj).getMethodName() + ": ": "") + obj);
 
         try {
             stream.writeObject(obj);
@@ -86,7 +86,7 @@ public class TCPUtil implements ILogger{
 
     public static Object receiveObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         final Object obj = stream.readObject();
-        System.out.println("Received: " + (((obj instanceof ActionPacket)) ? ((ActionPacket) obj).getMethodName() + ": ": "") + obj);
+        ILogger.STATIC_LOGGER.info("Received: " + (((obj instanceof ActionPacket)) ? ((ActionPacket) obj).getMethodName() + ": ": "") + obj);
         return obj;
     }
 

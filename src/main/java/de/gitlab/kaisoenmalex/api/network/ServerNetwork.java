@@ -78,7 +78,7 @@ public class ServerNetwork implements ILogger, Closeable {
     /**
      * @param id host -> 0; guest -> 1
      */
-    public <T> void sendObject(T obj, int id) {
+    public void sendPacket(ActionPacket obj, int id) {
         ObjectOutputStream writer = ((id == 0) ? listener0.getObjectWriter() : listener1.getObjectWriter());
 
         if (writer == null) throw new IllegalStateException("Writer is not assigned. Wait until first client request handle.");
@@ -149,16 +149,14 @@ public class ServerNetwork implements ILogger, Closeable {
 
             if (aliveCheck > 5){
                 if (hasAnswered) {
-                    System.out.println("Test Alive");
                     final ActionPacket packet = new ActionPacket("isAlive");
-                    sendObject(packet, id);
+                    sendPacket(packet, id);
                     hasAnswered = false;
                 }
                 else {
-                    System.out.println("Abort Game");
                     final ActionPacket stopPacket = new ActionPacket("abortGame");
-                    sendObject(stopPacket, 0);
-                    sendObject(stopPacket, 1);
+                    sendPacket(stopPacket, 0);
+                    sendPacket(stopPacket, 1);
 
                     try {
                         Thread.sleep(10000);

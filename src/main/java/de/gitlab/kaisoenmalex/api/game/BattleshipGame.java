@@ -8,7 +8,7 @@ import java.io.Closeable;
 
 /**
  * @author Alexander Ley
- * @version 1.0
+ * @version 1.0.1
  *
  * This class represents a BattleshipGame.
  */
@@ -92,10 +92,10 @@ public class BattleshipGame implements Closeable {
     public void startGame(){
         if (hostClient.isReady() && guestClient.isReady()) {
             final ActionPacket hostPacket = new ActionPacket("startGame", true);
-            serverNetwork.sendObject(hostPacket, 0);
+            serverNetwork.sendPacket(hostPacket, 0);
 
             final ActionPacket guestPacket = new ActionPacket("startGame", false);
-            serverNetwork.sendObject(guestPacket, 1);
+            serverNetwork.sendPacket(guestPacket, 1);
         }
     }
 
