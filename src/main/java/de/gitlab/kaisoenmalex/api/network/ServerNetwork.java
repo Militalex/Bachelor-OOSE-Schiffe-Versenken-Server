@@ -18,7 +18,7 @@ import java.net.Socket;
 
 /**
  * @author Alexander Ley
- * @version 1.3
+ * @version 1.4
  *
  * This Class helps to communicate with Clients. It can send things to client and handle client requests.
  */
@@ -201,23 +201,17 @@ public class ServerNetwork implements ILogger, Closeable {
 
             try {
                 objectWriter.close();
-            } catch (IOException e) {
-                LOGGER.info("An I/O error occurs when closing the ObjectOutputStream.", e);
-            }
+            } catch (Exception ignored) { }
 
             try {
                 objectReader.close();
             }
-            catch (IOException e) {
-                LOGGER.info("An I/O error occurs when closing the ObjectInputReader.", e);
-            }
+            catch (Exception ignored) { }
 
             try {
                 serverSocket.close();
             }
-            catch (IOException e) {
-                LOGGER.info("An I/O error occurs when closing the socket.", e);
-            }
+            catch (Exception ignored) { }
         }
     }
 }
