@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author Alexander Ley
- * @version 1.3
+ * @version 1.4
  *
  * This Class is the entry Point for the Server Application.
  */
@@ -68,8 +68,7 @@ public class BattleshipServer {
                         client.setHost(false);
 
                         final BattleshipGame host = WAITING_GAMES_RANDOM.values().stream().findFirst().orElse(null);
-
-                        if (host == null) return null;
+                        assert host != null;
 
                         host.guestClientJoin(client);
                         ACTIVE_GAMES.put(host.getCode(), host);
@@ -137,6 +136,23 @@ public class BattleshipServer {
             );
 
             return gson.toJson(statusPacket);
+        });
+
+        /*
+        * Defines waitingAbort Request.
+        *
+        * Clients can request for game to abort before actual game has started.
+         */
+        Spark.post("/waitingAbort", (request, response) -> {
+            final String code = request.body();
+
+            BattleshipGame game = WAITING_GAMES_CODE.get(code);
+            if (game == null) game = WAITING_GAMES_RANDOM.get(code);
+            if (game == null) return false;
+
+            game.close();
+
+            return true;
         });
     }
 
