@@ -3,12 +3,14 @@ package de.gitlab.kaisoenmalex.api.game;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.function.Consumer;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * @author Alexander Ley
- * @version 1.3
+ * @version 1.4
  *
  * This class controls gameArea and offers Methods to place ships, shoot and other cool staff.
  */
@@ -41,6 +43,16 @@ public class GameArea implements Serializable {
     public void setField(Field field, int x, int y){
         if (x < 0 || x >= 10 || y < 0 || y >= 10) throw new IllegalArgumentException("Coordinates: (" + x + ", " + y + ") are illegal.");
         area[x][y] = field;
+    }
+
+    public boolean haveShip(){
+        for (int x = 0; x < area.length; x++){
+            for (int y = 0; y < area[x].length; y++){
+                if (getField(x, y).isShip()) return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -195,17 +207,31 @@ public class GameArea implements Serializable {
         return field.shoot();
     }
 
+    public void addNeededMarks(){
+        stream().forEach(field -> {
+            if (field.isShip()) markAround(field.getXCord(), field.getYCord());
+        });
+    }
+
+    public void removeAllMarks(){
+        stream().forEach(Field::unmarkField);
+    }
+
     /**
      * Clears area by removing all ships and marks.
      */
     public void clear(){
-        Arrays.stream(area).forEach(fields ->
-                Arrays.stream(fields).forEach(Field::clear));
+        stream().forEach(Field::clear);
     }
 
-    public void forEach(Consumer<Field> consumer){
-        Arrays.stream(area).forEach(fields ->
-                Arrays.stream(fields).forEach(consumer));
+    public Stream<Field> stream(){
+        final List<Field> list = new ArrayList<>();
+
+        for (Field[] fields : area){
+            list.addAll(Arrays.asList(fields));
+        }
+
+        return list.stream();
     }
 
     /**
