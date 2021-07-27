@@ -2,10 +2,7 @@ package de.gitlab.kaisoenmalex.api.network;
 
 import de.gitlab.kaisoenmalex.api.game.BattleshipGame;
 import de.gitlab.kaisoenmalex.api.network.packets.ActionPacket;
-import de.gitlab.kaisoenmalex.api.util.ILogger;
-import de.gitlab.kaisoenmalex.api.util.Reflector;
-import de.gitlab.kaisoenmalex.api.util.TCPUtil;
-import de.gitlab.kaisoenmalex.api.util.Tickable;
+import de.gitlab.kaisoenmalex.api.util.*;
 import org.slf4j.Logger;
 
 import java.io.Closeable;
@@ -58,14 +55,17 @@ public class ServerNetwork implements ILogger, Closeable {
                 Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer, game, (id == 0) ? game.getHostClient() : game.getGuestClient());
             }
             else {
-                final Object[] objects = new Object[packet.getParameters().size() + 1];
-                objects[0] = writer;
+                final Object[] objects = new Object[packet.getParameters().size() + 3];
 
-                for (int i = 1; i <= packet.getParameters().size(); i++){
-                    objects[i] = packet.getParameters().get(i - 1);
+                objects[0] = writer;
+                objects[1] = game;
+                objects[2] = (id == 0) ? game.getHostClient() : game.getGuestClient();
+
+                for (int i = 3; i < packet.getParameters().size() + 3; i++){
+                    objects[i] = packet.getParameters().get(i - 3);
                 }
 
-                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer, game, (id == 0) ? game.getHostClient() : game.getGuestClient(), objects);
+                Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), objects);
             }
         }
         catch (InvocationTargetException | IllegalAccessException e) {
@@ -154,18 +154,11 @@ public class ServerNetwork implements ILogger, Closeable {
                     hasAnswered = false;
                 }
                 else {
-                    final ActionPacket stopPacket = new ActionPacket("abortGame");
-                    sendPacket(stopPacket, 0);
-                    sendPacket(stopPacket, 1);
+                    game.setRunning(false);
+                    game.getHostClient().abort("Verbindung zum Gegner ist abgebrochen. Bitte versuche es erneut.");
+                    game.getGuestClient().abort("Verbindung zum Gegner ist abgebrochen. Bitte versuche es erneut.");
 
-                    try {
-                        Thread.sleep(10000);
-                    }
-                    catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    game.close();
+                    new RunLater(10, unused -> game.close());
                 }
                 aliveCheck = 0;
             }
@@ -175,7 +168,7 @@ public class ServerNetwork implements ILogger, Closeable {
                     if (objectReader == null) objectReader = TCPUtil.getObjectReader(socket);
 
                     try {
-                        if (TCPUtil.getReader(socket).ready()) {
+                        while (TCPUtil.getReader(socket).ready()) {
                             ActionPacket packet = (ActionPacket) TCPUtil.receiveObject(objectReader);
                             handleClientRequest(objectWriter, objectReader, packet, id);
                         }
