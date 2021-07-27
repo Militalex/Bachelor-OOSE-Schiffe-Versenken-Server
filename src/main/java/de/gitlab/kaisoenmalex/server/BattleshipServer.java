@@ -3,20 +3,28 @@ package de.gitlab.kaisoenmalex.server;
 import com.google.gson.Gson;
 import de.gitlab.kaisoenmalex.api.game.BattleshipClient;
 import de.gitlab.kaisoenmalex.api.game.BattleshipGame;
+import de.gitlab.kaisoenmalex.api.network.ActionHandler;
+import de.gitlab.kaisoenmalex.api.network.packets.ActionPacket;
 import de.gitlab.kaisoenmalex.api.network.packets.ConnectPacket;
 import de.gitlab.kaisoenmalex.api.network.packets.GameStatusPacket;
 import de.gitlab.kaisoenmalex.api.network.packets.RequestGameStatusPacket;
+import de.gitlab.kaisoenmalex.api.util.ILogger;
+import de.gitlab.kaisoenmalex.api.util.Reflector;
 import de.gitlab.kaisoenmalex.api.util.Tuple;
 import spark.Spark;
 
+import java.io.ObjectOutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
  * @author Alexander Ley
- * @version 1.4
+ * @version 1.6
  *
  * This Class is the entry Point for the Server Application.
  */
@@ -48,6 +56,7 @@ public class BattleshipServer {
          * something went wrong. If so the server will return null.
          */
         Spark.post("/connect", (request, response) -> {
+
             final ConnectPacket connectPacket = gson.fromJson(request.body(), ConnectPacket.class);
 
             //Generate free socket
@@ -154,6 +163,102 @@ public class BattleshipServer {
 
             return true;
         });
+
+        /*
+         * Defines async GameAction post request.
+         *
+         * This request enables client do server actions asynchronously.
+         */
+        Spark.post("/asyncAction", (request, response) -> {
+            final ActionPacket packet = gson.fromJson(request.body(), ActionPacket.class);
+            final List<Object> parameters = packet.getParameters();
+
+            ILogger.STATIC_LOGGER.info("Async Received: " + packet.getMethodName() + ": " + packet);
+
+            if (parameters == null) return null;
+
+            final BattleshipGame game;
+            final boolean isHost;
+
+            try {
+                game = ACTIVE_GAMES.get((String) packet.getParameters().get(0));
+                isHost = (Boolean) packet.getParameters().get(1);
+            }
+            catch (ClassCastException e){
+                ILogger.STATIC_LOGGER.warn("Wrong request to /asyncAction");
+                return null;
+            }
+
+            final BattleshipClient client = (isHost) ? game.getHostClient() : game.getGuestClient();
+            final ObjectOutputStream writer = ((isHost) ? game.getNetwork().getHostListener() : game.getNetwork().getGuestListener()).getObjectWriter();
+
+            try {
+                if (packet.getParameters().size() == 2){
+                    Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), writer, game, client);
+                }
+                else {
+                    final Object[] objects = new Object[packet.getParameters().size() + 1];
+
+                    objects[0] = writer;
+                    objects[1] = game;
+                    objects[2] = client;
+
+                    for (int i = 3; i < packet.getParameters().size() + 1; i++){
+                        objects[i] = packet.getParameters().get(i - 1);
+                    }
+
+                    Reflector.invokeStaticMethod(ActionHandler.class, packet.getMethodName(), objects);
+                }
+            }
+            catch (InvocationTargetException | IllegalAccessException e) {
+                ILogger.STATIC_LOGGER.error("Cannot invoke task: " + packet.getMethodName(), e);
+                return null;
+            }
+            return true;
+        });
+
+        /*
+         * Enables users from outside to get status server information  (only for debug reasons).
+         */
+        Spark.get("/info", (request, response) -> "Active Games: " + ACTIVE_GAMES.size() +
+                "\n" +
+                "Waiting Clients with Code: " + WAITING_GAMES_CODE.size() +
+                "\n" +
+                "Waiting Clients without Code: " + WAITING_GAMES_RANDOM.size() +
+                "\n");
+
+        /*
+        * Enables users from outside to stop all games (only for debug reasons).
+        */
+        Spark.get("/clear", (request, response) -> {
+            clearGames();
+            return true;
+        });
+
+        /*
+        * Enables users from outside to shutdown server (only for debug reasons).
+        */
+        Spark.get("/stop", (request, response) -> {
+            clearGames();
+            Spark.stop();
+            return true;
+        });
+    }
+
+    /**
+     * Closes all games.
+     */
+    public static void clearGames(){
+        boolean flag = true;
+        while (flag) {
+            try {
+                ACTIVE_GAMES.forEach((s, battleshipGame) -> battleshipGame.close());
+                WAITING_GAMES_CODE.forEach((s, battleshipGame) -> battleshipGame.close());
+                WAITING_GAMES_RANDOM.forEach((s, game) -> game.close());
+                flag = false;
+            }
+            catch (ConcurrentModificationException ignored) { }
+        }
     }
 
     /**
