@@ -130,7 +130,7 @@ public class BattleshipServer {
             final GameStatusPacket statusPacket = new GameStatusPacket(
                     (isHost) ? game.getHostClient().getName() : game.getGuestClient().getName(),
                     (isHost) ? game.getGuestClient().getName() : game.getHostClient().getName(),
-                    game.isNoob(), (isHost) ? game.canHostAttack() : game.canGuestAttack(), game.getShootBuffer(),
+                    game.isNoob(), (isHost) ? game.canHostAttack() : game.canGuestAttack(),
                     (isHost) ? game.getHostClient().getArea() : game.getGuestClient().getArea(),
                     (isHost) ? game.getGuestClient().getArea() : game.getHostClient().getArea()
             );

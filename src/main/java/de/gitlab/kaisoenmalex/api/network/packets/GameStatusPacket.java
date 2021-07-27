@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 /**
  * @author Alexander Ley
- * @version 1.0
+ * @version 1.2
  *
  * This class holds all information about the actual game status.
  */
@@ -15,19 +15,16 @@ public class GameStatusPacket implements Serializable {
     private final String ownName, enemyName;
     private final boolean isNoob;
     private final boolean canAttack;
-    private final String enemyShootText;
     private final GameArea ownArea, enemyArea;
 
     /**
      * @param canAttack Determine if the actual player can attack.
-     * @param enemyShootText Determine if enemy has shoot water or ship.
      */
-    public GameStatusPacket(String ownName, String enemyName, boolean isNoob, boolean canAttack, String enemyShootText, GameArea ownArea, GameArea enemyArea) {
+    public GameStatusPacket(String ownName, String enemyName, boolean isNoob, boolean canAttack, GameArea ownArea, GameArea enemyArea) {
         this.ownName = ownName;
         this.enemyName = enemyName;
         this.isNoob = isNoob;
         this.canAttack = canAttack;
-        this.enemyShootText = enemyShootText;
         this.ownArea = ownArea;
         this.enemyArea = enemyArea;
     }
@@ -46,10 +43,6 @@ public class GameStatusPacket implements Serializable {
 
     public boolean canAttack() {
         return canAttack;
-    }
-
-    public String getEnemyShootText() {
-        return enemyShootText;
     }
 
     public GameArea getOwnArea() {

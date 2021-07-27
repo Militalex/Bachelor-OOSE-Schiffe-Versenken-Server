@@ -38,7 +38,7 @@ public class ActionHandler {
     private static void sendStatus(ObjectOutputStream writer, BattleshipGame game, BattleshipClient client){
         final ActionPacket statusPacket = new ActionPacket("receiveStatus",
                 new GameStatusPacket(client.getName(), ((client.isHost()) ? game.getHostClient() : game.getGuestClient()).getName(), game.isNoob(),
-                        (client.isHost()) ? game.canHostAttack() : game.canGuestAttack(), "empty",
+                        (client.isHost()) ? game.canHostAttack() : game.canGuestAttack(),
                                 client.getArea(), ((client.isHost() ? game.getGuestClient() : game.getHostClient())).getArea()));
 
         game.getNetwork().sendPacket(statusPacket, client.isHost() ? 0 : 1);
