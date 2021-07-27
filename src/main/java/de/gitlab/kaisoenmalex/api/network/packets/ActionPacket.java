@@ -1,20 +1,21 @@
 package de.gitlab.kaisoenmalex.api.network.packets;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 /**
  * @author Alexander Ley
- * @version 1.0
+ * @version 1.2
  *
  * This class is send between server and client to perform an action.
  */
 public class ActionPacket implements Serializable {
 
     private final String methodName;
-    private final List<Object> parameters;
+    private List<Object> parameters;
 
     /**
      * Parameters are empty -> for void methods.
@@ -48,5 +49,21 @@ public class ActionPacket implements Serializable {
 
     public List<Object> getParameters() {
         return parameters;
+    }
+
+    public void addParameter(Object obj){
+        if (parameters.isEmpty()){
+            parameters = new ArrayList<>(Collections.singletonList(obj));
+        }
+        else {
+            try{
+                parameters.add(obj);
+            }
+            catch (Exception ex){
+                final ArrayList<Object> list = new ArrayList<>(parameters);
+                list.add(obj);
+                parameters = list;
+            }
+        }
     }
 }
