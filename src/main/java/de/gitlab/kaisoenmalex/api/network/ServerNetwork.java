@@ -15,7 +15,7 @@ import java.net.Socket;
 
 /**
  * @author Alexander Ley
- * @version 1.4
+ * @version 1.5
  *
  * This Class helps to communicate with Clients. It can send things to client and handle client requests.
  */
