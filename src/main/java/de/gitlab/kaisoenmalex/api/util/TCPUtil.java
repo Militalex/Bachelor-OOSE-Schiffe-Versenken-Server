@@ -19,8 +19,8 @@ import java.net.SocketTimeoutException;
  */
 public class TCPUtil implements ILogger{
 
-    public static final String SERVER_ADDRESS = "http://localhost:4567/";
-    public static final String HOST_ADDRESS = "localhost";
+    public static final String SERVER_ADDRESS = "http://schiffe.milinphostor.de:4567/";
+    public static final String HOST_ADDRESS = "schiffe.milinphostor.de";
 
     public static final Gson gson = new Gson();
 
