@@ -4,12 +4,13 @@ import de.gitlab.kaisoenmalex.api.game.BattleshipClient;
 import de.gitlab.kaisoenmalex.api.game.BattleshipGame;
 import de.gitlab.kaisoenmalex.api.network.packets.ActionPacket;
 import de.gitlab.kaisoenmalex.api.network.packets.GameStatusPacket;
+import de.gitlab.kaisoenmalex.api.util.RunLater;
 
 import java.io.ObjectOutputStream;
 
 /**
  * @author Alexander Ley
- * @version 1.1.1
+ * @version 1.2
  *
  * This class defines all server reactions.
  * Note every Method have (PrintWriter writer, BattleshipGame game, BattleshipClient client, Object... parameters) Parameters.
@@ -42,5 +43,30 @@ public class ActionHandler {
                                 client.getArea(), ((client.isHost() ? game.getGuestClient() : game.getHostClient())).getArea()));
 
         game.getNetwork().sendPacket(statusPacket, client.isHost() ? 0 : 1);
+    }
+
+    /**
+     * Server Response if client is shooting a field.
+     */
+    private static void shoot(ObjectOutputStream writer, BattleshipGame game, BattleshipClient client, Double x, Double y){
+        Boolean result = ((client.isHost()) ? game.getGuestClient() : game.getHostClient()).getArea().shootField(x.intValue(), y.intValue());
+        assert result != null;
+
+        if (!result) {
+            game.setCanHostAttack(!client.isHost());
+        }
+
+        final ActionPacket packet = new ActionPacket("refreshStatus");
+        game.getNetwork().sendPacket(packet, 0);
+        game.getNetwork().sendPacket(packet, 1);
+    }
+
+    /**
+     * Server Response if one client is suddenly aborting game.
+     */
+    private static void abortGame(ObjectOutputStream writer, BattleshipGame game, BattleshipClient client){
+        (client.isHost() ? game.getGuestClient() : game.getHostClient()).abort("Der Gegner hat das Spiel verlassen!");
+
+        new RunLater(10, unused -> game.close());
     }
 }
