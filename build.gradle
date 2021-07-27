@@ -40,7 +40,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'de.gitlab.kaisoenmalex.BattleshipServerMain'
+        attributes 'Main-Class': 'de.gitlab.kaisoenmalex.server.BattleshipServer'
     }
 
     from {
