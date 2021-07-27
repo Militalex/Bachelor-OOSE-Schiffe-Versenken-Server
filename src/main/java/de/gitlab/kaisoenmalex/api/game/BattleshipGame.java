@@ -2,23 +2,22 @@ package de.gitlab.kaisoenmalex.api.game;
 
 import de.gitlab.kaisoenmalex.api.network.ServerNetwork;
 import de.gitlab.kaisoenmalex.api.network.packets.ActionPacket;
+import de.gitlab.kaisoenmalex.api.util.RunLater;
 import de.gitlab.kaisoenmalex.server.BattleshipServer;
 
 import java.io.Closeable;
 
 /**
  * @author Alexander Ley
- * @version 1.0.1
+ * @version 1.2
  *
  * This class represents a BattleshipGame.
  */
 public class BattleshipGame implements Closeable {
 
-    private String code;
-    /**
-     * Text Buffer to say if enemy has shot water or ship.
-     */
-    private String shootBuffer = "empty";
+    private final String code;
+    private boolean isRunning = false;
+
     private final boolean isNoob;
     private boolean canHostAttack = true;
 
@@ -27,39 +26,29 @@ public class BattleshipGame implements Closeable {
     private BattleshipClient hostClient, guestClient;
 
     /**
-     * @param code Identification code.
-     */
-    public BattleshipGame(String code, boolean isNoob, BattleshipClient hostClient, BattleshipClient guestClient) {
-        this.code = code;
-        this.isNoob = isNoob;
-        this.hostClient = hostClient;
-        this.guestClient = guestClient;
-        guestClientJoin(guestClient);
-    }
-
-    /**
      * Note in this state the game is not complete. Game is in waiting for enemy state.
      * @param code Identification code.
      */
     public BattleshipGame(String code, boolean isNoob, BattleshipClient hostClient){
         this.code = code;
-        this.isNoob = true;
+        this.isNoob = isNoob;
         this.hostClient = hostClient;
+        hostClient.setGame(this);
     }
 
     public void guestClientJoin(BattleshipClient guestClient){
         this.guestClient = guestClient;
         this.serverNetwork = new ServerNetwork(this, hostClient.getServerSocket(), guestClient.getServerSocket());
+        this.isRunning = true;
+        guestClient.setGame(this);
     }
 
     public String getCode() {
         return code;
     }
 
-    public String getShootBuffer() {
-        final String ret = shootBuffer;
-        shootBuffer = "empty";
-        return shootBuffer;
+    public boolean isRunning() {
+        return isRunning;
     }
 
     public boolean isNoob() {
@@ -86,6 +75,14 @@ public class BattleshipGame implements Closeable {
         return !canHostAttack;
     }
 
+    public void setRunning(boolean running) {
+        isRunning = running;
+    }
+
+    public void setCanHostAttack(boolean canHostAttack) {
+        this.canHostAttack = canHostAttack;
+    }
+
     /**
      * Starts game and send startGame packet to clients.
      */
@@ -104,8 +101,21 @@ public class BattleshipGame implements Closeable {
      */
     @Override
     public void close() {
-        if (serverNetwork != null){
-            serverNetwork.close();
+        if (isRunning){
+            getHostClient().abort("Das Spiel musste vorzeitig beendet werden. Entschuldigen Sie die Unanehmlichkeiten.");
+            getGuestClient().abort("Das Spiel musste vorzeitig beendet werden. Entschuldigen Sie die Unanehmlichkeiten.");
+
+            new RunLater(10, o -> {
+                if (serverNetwork != null){
+                    serverNetwork.close();
+                }
+            });
+            isRunning = false;
+        }
+        else {
+            if (serverNetwork != null) {
+                serverNetwork.close();
+            }
         }
 
         BattleshipServer.ACTIVE_GAMES.remove(code);
