@@ -83,6 +83,9 @@ public class ActionHandler {
         new RunLater(10, unused -> game.close());
     }
 
+    /**
+     * Server Response if one client surrenders.
+     */
     private static void giveUp(ObjectOutputStream writer, BattleshipGame game, BattleshipClient client) {
         final ActionPacket gameWonPacket = new ActionPacket("stopGame", true, true);
         final ActionPacket gameLoosePacket = new ActionPacket("stopGame", false, false);
