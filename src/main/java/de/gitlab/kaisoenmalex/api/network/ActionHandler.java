@@ -59,10 +59,6 @@ public class ActionHandler {
             game.setCanHostAttack(!client.isHost());
         }
 
-        final ActionPacket packet = new ActionPacket("refreshStatus");
-        game.getNetwork().sendPacket(packet, 0);
-        game.getNetwork().sendPacket(packet, 1);
-
         if (enemyClient.getArea().allShipsShot()){
             final ActionPacket gameWonPacket = new ActionPacket("stopGame", true, false);
             final ActionPacket gameLoosePacket = new ActionPacket("stopGame", false, false);
@@ -71,7 +67,12 @@ public class ActionHandler {
             game.getNetwork().sendPacket(gameLoosePacket, (enemyClient.isHost()) ? 0 : 1);
             game.setRunning(false);
             game.close();
+            return;
         }
+
+        final ActionPacket packet = new ActionPacket("refreshStatus");
+        game.getNetwork().sendPacket(packet, 0);
+        game.getNetwork().sendPacket(packet, 1);
     }
 
     /**
