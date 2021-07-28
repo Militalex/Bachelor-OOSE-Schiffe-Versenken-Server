@@ -64,11 +64,13 @@ public class ActionHandler {
         game.getNetwork().sendPacket(packet, 1);
 
         if (enemyClient.getArea().allShipsShot()){
-            final ActionPacket gameWonPacket = new ActionPacket("stopGame", true);
-            final ActionPacket gameLoosePacket = new ActionPacket("stopGame", false);
+            final ActionPacket gameWonPacket = new ActionPacket("stopGame", true, false);
+            final ActionPacket gameLoosePacket = new ActionPacket("stopGame", false, false);
 
             game.getNetwork().sendPacket(gameWonPacket, (client.isHost()) ? 0 : 1);
             game.getNetwork().sendPacket(gameLoosePacket, (enemyClient.isHost()) ? 0 : 1);
+            game.setRunning(false);
+            game.close();
         }
     }
 
@@ -79,5 +81,15 @@ public class ActionHandler {
         (client.isHost() ? game.getGuestClient() : game.getHostClient()).abort("Der Gegner hat das Spiel verlassen!");
 
         new RunLater(10, unused -> game.close());
+    }
+
+    private static void giveUp(ObjectOutputStream writer, BattleshipGame game, BattleshipClient client) {
+        final ActionPacket gameWonPacket = new ActionPacket("stopGame", true, true);
+        final ActionPacket gameLoosePacket = new ActionPacket("stopGame", false, false);
+
+        game.getNetwork().sendPacket(gameWonPacket, (client.isHost()) ? 1 : 0);
+        game.getNetwork().sendPacket(gameLoosePacket, (client.isHost()) ? 0 : 1);
+        game.setRunning(false);
+        game.close();
     }
 }
