@@ -2,6 +2,7 @@ package de.gitlab.kaisoenmalex.api.network;
 
 import de.gitlab.kaisoenmalex.api.game.BattleshipClient;
 import de.gitlab.kaisoenmalex.api.game.BattleshipGame;
+import de.gitlab.kaisoenmalex.api.game.GameArea;
 import de.gitlab.kaisoenmalex.api.network.packets.ActionPacket;
 import de.gitlab.kaisoenmalex.api.network.packets.GameStatusPacket;
 import de.gitlab.kaisoenmalex.api.util.RunLater;
@@ -10,7 +11,8 @@ import java.io.ObjectOutputStream;
 
 /**
  * @author Alexander Ley
- * @version 1.2
+ * @version 1.3
+ * latest author: Kai Sturm
  *
  * This class defines all server reactions.
  * Note every Method have (PrintWriter writer, BattleshipGame game, BattleshipClient client, Object... parameters) Parameters.
@@ -49,7 +51,8 @@ public class ActionHandler {
      * Server Response if client is shooting a field.
      */
     private static void shoot(ObjectOutputStream writer, BattleshipGame game, BattleshipClient client, Double x, Double y){
-        Boolean result = ((client.isHost()) ? game.getGuestClient() : game.getHostClient()).getArea().shootField(x.intValue(), y.intValue());
+        BattleshipClient enemyClient = (client.isHost()) ? game.getGuestClient() : game.getHostClient();
+        Boolean result = enemyClient.getArea().shootField(x.intValue(), y.intValue());
         assert result != null;
 
         if (!result) {
@@ -59,6 +62,14 @@ public class ActionHandler {
         final ActionPacket packet = new ActionPacket("refreshStatus");
         game.getNetwork().sendPacket(packet, 0);
         game.getNetwork().sendPacket(packet, 1);
+
+        if (enemyClient.getArea().allShipsShot()){
+            final ActionPacket gameWonPacket = new ActionPacket("stopGame", true);
+            final ActionPacket gameLoosePacket = new ActionPacket("stopGame", false);
+
+            game.getNetwork().sendPacket(gameWonPacket, (client.isHost()) ? 0 : 1);
+            game.getNetwork().sendPacket(gameLoosePacket, (enemyClient.isHost()) ? 0 : 1);
+        }
     }
 
     /**
