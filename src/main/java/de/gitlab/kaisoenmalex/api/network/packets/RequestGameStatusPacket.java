@@ -1,10 +1,10 @@
 package de.gitlab.kaisoenmalex.api.network.packets;
 
 /**
+ * This class is sent to server to request via POST Request GameStatus.
+ *
  * @author Alexander Ley
  * @version 1.0
- *
- * This class is send to server to request via POST Request GameStatus.
  */
 public class RequestGameStatusPacket {
 

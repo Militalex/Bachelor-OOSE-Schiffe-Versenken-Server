@@ -2,7 +2,6 @@ package de.gitlab.kaisoenmalex.api.network;
 
 import de.gitlab.kaisoenmalex.api.game.BattleshipClient;
 import de.gitlab.kaisoenmalex.api.game.BattleshipGame;
-import de.gitlab.kaisoenmalex.api.game.GameArea;
 import de.gitlab.kaisoenmalex.api.network.packets.ActionPacket;
 import de.gitlab.kaisoenmalex.api.network.packets.GameStatusPacket;
 import de.gitlab.kaisoenmalex.api.util.RunLater;
@@ -10,12 +9,12 @@ import de.gitlab.kaisoenmalex.api.util.RunLater;
 import java.io.ObjectOutputStream;
 
 /**
+ * This class defines all server reactions.
+ * Note every Method have (PrintWriter writer, BattleshipGame game, BattleshipClient client, Object... parameters) Parameters.
+ *
  * @author Alexander Ley
  * @version 1.3
  * latest author: Kai Sturm
- *
- * This class defines all server reactions.
- * Note every Method have (PrintWriter writer, BattleshipGame game, BattleshipClient client, Object... parameters) Parameters.
  */
 public class ActionHandler {
 

@@ -6,10 +6,11 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 /**
+ * This class splits a type into fields, constructors and methods and offers functionality to call them.
+ *
  * @author Alexander Ley
  * @version 1.0
  *
- * This class splits a type into fields, constructors and methods and offers functionality to call them.
  * @param <T> Type that should split up into fields, constructors and methods.
  */
 public class Reflector<T> {

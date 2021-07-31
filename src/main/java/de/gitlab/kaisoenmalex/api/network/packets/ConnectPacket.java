@@ -3,10 +3,10 @@ package de.gitlab.kaisoenmalex.api.network.packets;
 import de.gitlab.kaisoenmalex.api.game.GameArea;
 
 /**
+ * This class stores data which is sent to server by client to connect the first time.
+ *
  * @author Alexander Ley
  * @version 1.0
- *
- * This class stores data which is send to server by client to connect the first time.
  */
 public class ConnectPacket {
     private final String name;

@@ -7,10 +7,10 @@ import org.jetbrains.annotations.Nullable;
 import java.net.ServerSocket;
 
 /**
+ * This class represents a battlesipClient, stores its data and can do client stuff.
+ *
  * @author Alexander Ley
  * @version 1.0
- *
- * This class represents a battlesipClient, stores its data and can do client stuff.
  */
 public class BattleshipClient implements ILogger {
 

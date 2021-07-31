@@ -23,10 +23,10 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
+ * This Class is the entry Point for the Server Application.
+ *
  * @author Alexander Ley
  * @version 1.6
- *
- * This Class is the entry Point for the Server Application.
  */
 public class BattleshipServer {
 

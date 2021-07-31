@@ -3,10 +3,10 @@ package de.gitlab.kaisoenmalex.api.util;
 import java.util.function.Consumer;
 
 /**
+ * This class is used to perform an action a specific amount of time later.
+ *
  * @author Alexander Ley
  * @version 1.1
- *
- * Thsi class is used to perform an action a specific amount of time later.
  */
 public class RunLater extends Tickable{
 

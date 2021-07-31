@@ -8,10 +8,10 @@ import javafx.scene.image.Image;
 import java.io.Serializable;
 
 /**
+ * This class represents one field in GameArea and manage all field properties including textures.
+ *
  * @author Alexander Ley
  * @version 1.2
- *
- * This class represents one field in GameArea and manage all field properties including textures.
  */
 public class Field implements ILogger, Serializable {
 

@@ -12,10 +12,10 @@ import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 
 /**
+ * This class offers' tcp methods.
+ *
  * @author Alexander Ley
  * @version 1.3.5
- *
- * This class offers tcp methods.
  */
 public class TCPUtil implements ILogger{
 

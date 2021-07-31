@@ -6,10 +6,10 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 
 /**
+ * This interface give classes the functionality to use a logger.
+ *
  * @author Alexander Ley
  * @version 1.1
- *
- * This interface give classes the functionality to use a logger.
  */
 public interface ILogger{
 

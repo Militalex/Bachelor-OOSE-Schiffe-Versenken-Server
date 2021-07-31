@@ -1,9 +1,10 @@
 package de.gitlab.kaisoenmalex.api.util;
 
 /**
+ * Service Class for Integers, Doubles, etc...
+ *
  * @author Alexander Ley
  * @version 1.2
- * Service Class for Integers, Doubles, etc...
  */
 public class NumberUtil {
 	/**

@@ -7,10 +7,11 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
+ * This class simulates a 2-homogeneousTuple.
+ *
  * @author Alexander Ley
  * @version 1.1
  *
- * This class simulates a 2-homogeneousTuple.
  * @param <T> type of first and second.
  */
 public class HomogenTuple<T> extends Tuple<T, T> {

@@ -5,10 +5,10 @@ import de.gitlab.kaisoenmalex.api.game.GameArea;
 import java.io.Serializable;
 
 /**
+ * This class holds all information about the actual game status.
+ *
  * @author Alexander Ley
  * @version 1.2
- *
- * This class holds all information about the actual game status.
  */
 public class GameStatusPacket implements Serializable {
 

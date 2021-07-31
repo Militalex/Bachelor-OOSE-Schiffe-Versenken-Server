@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
+ * This class controls gameArea and offers Methods to place ships, shoot and other cool staff.
+ *
  * @author Alexander Ley
  * @version 1.4
- *
- * This class controls gameArea and offers Methods to place ships, shoot and other cool staff.
  */
 public class GameArea implements Serializable {
 

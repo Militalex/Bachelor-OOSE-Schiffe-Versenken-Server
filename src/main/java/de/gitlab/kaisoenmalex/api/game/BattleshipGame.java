@@ -8,10 +8,10 @@ import de.gitlab.kaisoenmalex.server.BattleshipServer;
 import java.io.Closeable;
 
 /**
+ * This class represents a BattleshipGame.
+ *
  * @author Alexander Ley
  * @version 1.2
- *
- * This class represents a BattleshipGame.
  */
 public class BattleshipGame implements Closeable {
 

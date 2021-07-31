@@ -7,10 +7,10 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * This class is sent between server and client to perform an action.
+ *
  * @author Alexander Ley
  * @version 1.2
- *
- * This class is send between server and client to perform an action.
  */
 public class ActionPacket implements Serializable {
 

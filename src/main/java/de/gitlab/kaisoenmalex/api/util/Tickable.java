@@ -4,10 +4,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
+ * Represents an Object with Timer
+ *
  * @author Alexander Ley
  * @version 1.5
- *
- * Represents an Object with Timer
  */
 public abstract class Tickable {
 

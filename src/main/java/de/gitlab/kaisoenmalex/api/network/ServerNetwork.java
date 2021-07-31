@@ -14,10 +14,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
+ * This Class helps to communicate with Clients. It can send things to client and handle client requests.
+ *
  * @author Alexander Ley
  * @version 1.5
- *
- * This Class helps to communicate with Clients. It can send things to client and handle client requests.
  */
 public class ServerNetwork implements ILogger, Closeable {
 

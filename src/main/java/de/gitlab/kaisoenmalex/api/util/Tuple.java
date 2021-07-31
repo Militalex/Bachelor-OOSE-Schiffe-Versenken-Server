@@ -5,10 +5,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 /**
+ * This Class simulates a 2-Tuple.
  * @author Alexander Ley
  * @version 1.3
  *
- * This Class simulates a 2-Tuple.
  * @param <K> First Type
  * @param <V> Second Type
  */

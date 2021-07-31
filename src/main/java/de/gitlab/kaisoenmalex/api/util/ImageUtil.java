@@ -18,10 +18,10 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
+ * This class offers help methods to work with JavaFx Images.
+ *
  * @author Alexander Ley
  * @version 1.1
- *
- * This class offers help methods to work with JavaFx Images.
  */
 public class ImageUtil {
 

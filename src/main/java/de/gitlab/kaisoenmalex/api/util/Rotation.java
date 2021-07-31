@@ -1,10 +1,10 @@
 package de.gitlab.kaisoenmalex.api.util;
 
 /**
+ * This enum offers several rotations with degrees. This class is e.g. used in ImageManager.
+ *
  * @author Alexander Ley
  * @version 1.0
- *
- * This enum offers several rotations with degrees. This class is e.g. used in ImageManager.
  */
 public enum Rotation {
     NORTH(0),
