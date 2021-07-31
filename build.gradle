@@ -10,7 +10,7 @@ application {
 
 
 group 'de.gitlab.kaisoenmalex'
-version '1.0-ALPHA'
+version '1.2-ALPHA'
 
 repositories {
     mavenCentral()
